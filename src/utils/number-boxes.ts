@@ -5,12 +5,15 @@ import numberBoxesPt from "../../data/number-boxes/pt.json";
 import { LANGUAGE_CODE } from "./translate";
 
 export interface NumberBox {
+  type: "effect" | "healthPoints" | "evasionPoints" | "attackPoints";
   value: number;
   top: number;
   right: number;
   bottom: number;
   left: number;
 }
+
+export type NumberBoxType = NumberBox["type"];
 
 type NumberBoxDictionary = Record<string, NumberBox[]>;
 
@@ -43,4 +46,11 @@ export function resolveNumberBoxes(
   if (englishBoxes) {
     return { boxes: englishBoxes, language: LANGUAGE_CODE.EN };
   }
+}
+
+export function boxesOfType(
+  boxes: NumberBox[],
+  type: NumberBoxType,
+): NumberBox[] {
+  return boxes.filter((box) => box.type === type);
 }
