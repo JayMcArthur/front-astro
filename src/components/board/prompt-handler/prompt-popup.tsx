@@ -109,6 +109,11 @@ export const PromptPopup = ({
     });
   }, [sortedOptions, search]);
 
+  const toggleSingleSelection = (option: SelectionItem) => {
+    if (selectedOptions.includes(option)) removeSelection(option);
+    else replaceSelection(option);
+  };
+
   return (
     <Popup
       onPressBackdrop={onCancel}
@@ -157,25 +162,13 @@ export const PromptPopup = ({
           <EffectTextNumberSelector
             options={filteredOptions}
             selectedOptions={selectedOptions}
-            onPress={(option) => {
-              const isSelected = selectedOptions.indexOf(option) >= 0;
-              if (isSelected) removeSelection(option);
-              else replaceSelection(option);
-            }}
+            onPress={toggleSingleSelection}
           />
         ) : isOnCardSelection(filteredOptions) ? (
           <OnCardSelector
             options={filteredOptions}
             selectedOptions={selectedOptions}
-            onPress={(option) => {
-              const selectionIndex = selectedOptions.indexOf(option);
-              const isSelected = selectionIndex >= 0;
-              if (isSelected) {
-                removeSelection(option);
-              } else {
-                replaceSelection(option);
-              }
-            }}
+            onPress={toggleSingleSelection}
           />
         ) : (
           filteredOptions.map((option, index) => {
@@ -384,7 +377,7 @@ export const GenericOption = ({
       );
     case "effectTextNumber":
       return (
-        <CardNumberOption
+        <EffectTextNumberOption
           option={option}
           onPress={onPress}
           selected={selected}
@@ -813,7 +806,7 @@ export const NumberOption = ({
   );
 };
 
-const CardNumberOption = ({
+const EffectTextNumberOption = ({
   option,
   onPress,
   selected,

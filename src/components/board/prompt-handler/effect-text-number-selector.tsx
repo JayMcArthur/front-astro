@@ -2,11 +2,7 @@ import { useLanguageContext } from "@/components/contexts/language-context";
 import type { SelectionItem } from "@/shared/api";
 import { cn } from "@/utils/cn";
 import { HotkeyScope } from "@/utils/hotkey";
-import {
-  boxesOfType,
-  resolveNumberBoxes,
-  type NumberBox,
-} from "@/utils/number-boxes";
+import { resolveNumberBoxes, type NumberBox } from "@/utils/number-boxes";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Card, CARD_TEXT_MARKER_CLASS_NAME, CardTextMarker } from "../card";
 
@@ -47,7 +43,7 @@ export function EffectTextNumberSelector({
 
   const resolved = resolveNumberBoxes(card.slug, language);
   if (!resolved) return null;
-  const effectBoxes = boxesOfType(resolved.boxes, "effect");
+  const effectBoxes = resolved.boxes.filter((box) => box.type === "effect");
 
   return (
     <div className="relative">

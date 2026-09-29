@@ -47,10 +47,3 @@ export function resolveNumberBoxes(
     return { boxes: englishBoxes, language: LANGUAGE_CODE.EN };
   }
 }
-
-export function boxesOfType(
-  boxes: NumberBox[],
-  type: NumberBoxType,
-): NumberBox[] {
-  return boxes.filter((box) => box.type === type);
-}
