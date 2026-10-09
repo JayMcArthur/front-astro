@@ -1,18 +1,7 @@
 import { CardImage, CardTextMarker } from "@/components/board/card";
 import { useLanguageContext } from "@/components/contexts/language-context";
-import {
-  numberBoxCardSlugs,
-  resolveNumberBoxes,
-  type NumberBoxType,
-} from "@/utils/number-boxes";
+import { numberBoxCardSlugs, resolveNumberBoxes } from "@/utils/number-boxes";
 import { useState } from "react";
-
-const markerStyles: Record<NumberBoxType, string> = {
-  effect: "border-red-500 bg-red-400/30",
-  healthPoints: "border-green-500 bg-green-400/30",
-  evasionPoints: "border-blue-500 bg-blue-400/30",
-  attackPoints: "border-orange-500 bg-orange-400/30",
-};
 
 export const NumberBoxesContent = () => {
   const { language } = useLanguageContext();
@@ -47,8 +36,8 @@ export const NumberBoxesContent = () => {
             {resolved.boxes.map((box, occurrenceIndex) => (
               <CardTextMarker key={occurrenceIndex} bounds={box}>
                 <div
-                  title={`${occurrenceIndex}: ${box.type} ${box.value}`}
-                  className={`h-full w-full rounded-[0.3em] border-2 ${markerStyles[box.type]}`}
+                  title={`${occurrenceIndex}: ${box.value}`}
+                  className="h-full w-full rounded-[0.3em] border-2 border-red-500 bg-red-400/30"
                 />
               </CardTextMarker>
             ))}

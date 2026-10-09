@@ -43,7 +43,6 @@ export function EffectTextNumberSelector({
 
   const resolved = resolveNumberBoxes(card.slug, language);
   if (!resolved) return null;
-  const effectBoxes = resolved.boxes.filter((box) => box.type === "effect");
 
   return (
     <div className="relative">
@@ -54,7 +53,7 @@ export function EffectTextNumberSelector({
         imageLanguage={resolved.language}
       />
       {options.map((option, index) => {
-        const box = effectBoxes[option.payload.occurrenceIndex];
+        const box = resolved.boxes[option.payload.occurrenceIndex];
         if (!box) return null;
 
         return (

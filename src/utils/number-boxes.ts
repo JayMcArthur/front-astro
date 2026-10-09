@@ -5,15 +5,12 @@ import numberBoxesPt from "../../data/number-boxes/pt.json";
 import { LANGUAGE_CODE } from "./translate";
 
 export interface NumberBox {
-  type: "effect" | "healthPoints" | "evasionPoints" | "attackPoints";
   value: number;
   top: number;
   right: number;
   bottom: number;
   left: number;
 }
-
-export type NumberBoxType = NumberBox["type"];
 
 type NumberBoxDictionary = Record<string, NumberBox[]>;
 
