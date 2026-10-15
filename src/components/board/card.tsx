@@ -12,6 +12,7 @@ import { PileIndicator } from "@/icons/pile-indicator";
 import { SelectionIndexIndicator } from "./selection-index-indicator";
 import { useLanguageContext } from "../contexts/language-context";
 import { useBoardScale } from "./contexts/board-scale-context";
+import type { RevealProps } from "./use-reveal-gesture";
 
 export enum CardType {
   BonusSoul = "bsoul",
@@ -26,7 +27,7 @@ export enum CardType {
 type Orientation = "portrait" | "landscape";
 
 interface CardProps {
-  card?: { slug: string } | CardType;
+  card?: { slug: string; parent?: string } | CardType;
   style?: React.CSSProperties;
   containerClassName?: string;
   containerStyle?: React.CSSProperties;
@@ -43,7 +44,7 @@ interface CardProps {
   onPileDetailsClick?: () => void;
   onClick?: () => void;
   disabled?: boolean;
-  size: number;
+  size?: number;
   orientation?: Orientation;
   stats?: {
     healthPoints: number;
@@ -51,15 +52,20 @@ interface CardProps {
     evasionPoints?: number | undefined;
   };
   counters?: SerializedCounter[];
-  onMouseEnter?: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  revealProps?: RevealProps;
+  icon?: boolean;
 }
 
 const CARD_RADIUS = 5;
 
 const getOrientationParameters = (
   orientation: Orientation,
+  icon?: boolean,
 ): { aspectRatio: number; borderRadius: string } => {
+  if (icon) {
+    return { aspectRatio: 1, borderRadius: "20%" };
+  }
+
   const aspectRatio = orientation === "portrait" ? 750 / 1024 : 1024 / 750;
 
   const rx =
@@ -116,12 +122,16 @@ export const Card = ({
   effects,
   counters,
   globalId = 0,
-  onMouseEnter,
-  onMouseLeave,
+  revealProps,
+  icon = false,
 }: CardProps) => {
   const boardScale = useBoardScale();
-  size = orientation === "portrait" ? size : size * (750 / 1024);
-  const { aspectRatio, borderRadius } = getOrientationParameters(orientation);
+  size = icon ? 1 : orientation === "portrait" ? size : size * (750 / 1024);
+
+  const { aspectRatio, borderRadius } = getOrientationParameters(
+    orientation,
+    icon,
+  );
 
   if (!card) {
     return (
@@ -166,25 +176,54 @@ export const Card = ({
           ? "absolute font-statblock text-black top-[52.1%] left-[51.4%]"
           : "absolute font-statblock text-black top-[52.1%] left-[50.7%]"
       : "";
+
+  const sizes = `${size * aspectRatio * boardScale}em`;
+
+  // fraction of the parent card's height (from the top) that contains its artwork
+  const widths =
+    orientation === "portrait" ? PORTRAIT_WIDTHS : LANDSCAPE_WIDTHS;
+  const parentCardSlug =
+    typeof card === "object" &&
+    "parent" in card &&
+    typeof card.parent === "string"
+      ? card.parent
+      : undefined;
+  const parentSrcSet = parentCardSlug
+    ? "\n" +
+      widths
+        .map(
+          (size) =>
+            `${SELF_BASE_URL}/images/front/${parentCardSlug}_${size}_en.webp ${size}w`,
+        )
+        .join(",\n")
+    : undefined;
+
   return (
     <div
-      className={cn("relative", containerClassName)}
+      className={cn(
+        "relative",
+        icon && "aspect-square overflow-hidden",
+        containerClassName,
+      )}
       style={{
         borderRadius,
-        height: size + "em",
+        height: icon ? undefined : size + "em",
         aspectRatio,
         ...containerStyle,
       }}>
       <div
-        className={className}
+        className={cn(
+          className,
+          icon && orientation === "portrait" && "translate-y-[10%] scale-170",
+          icon && orientation === "landscape" && "translate-y-[43%] scale-300",
+        )}
         style={{
           borderRadius,
           ...style,
         }}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}>
+        {...revealProps}>
         <CardImage
-          sizes={`${size * aspectRatio * boardScale}em`}
+          sizes={sizes}
           card={card}
           onClick={onClick}
           className={cn(
@@ -197,6 +236,24 @@ export const Card = ({
           }}
           orientation={orientation}
         />
+
+        {parentCardSlug && (
+          <div
+            className="pointer-events-none absolute inset-0 h-full w-full opacity-50 mix-blend-hard-light"
+            style={{
+              clipPath: "inset(14% 12% 38% 12% round 8px)",
+              borderRadius,
+            }}>
+            <img
+              srcSet={parentSrcSet}
+              className="h-full w-full object-cover"
+              sizes={sizes}
+              src={`${SELF_BASE_URL}/images/front/${parentCardSlug}_256_en.webp`}
+              alt={parentCardSlug}
+              draggable={false}
+            />
+          </div>
+        )}
 
         {hotkey && (
           <div className="pointer-events-none absolute top-1 left-1 flex size-4 place-items-center overflow-hidden rounded-sm bg-taupe-700 outline-[0.1em]">
@@ -249,13 +306,17 @@ export const Card = ({
                 key={`${counter.type}-${index}`}
                 className="relative size-full">
                 <img
-                  src="/counter.png"
+                  src={
+                    counter.type === "golden"
+                      ? "/card-overlays/golden-counter.png"
+                      : "/card-overlays/counter.png"
+                  }
                   alt="Counter"
                   className="size-full object-contain"
                   style={{
                     filter:
                       counter.type === "golden"
-                        ? "brightness(150%) saturate(200%) sepia(100%)"
+                        ? "drop-shadow(0 0 0.5em #fffacc)"
                         : `brightness(150%) hue-rotate(${globalId ** 3 + globalId * 17}deg)`,
                   }}
                 />
@@ -277,7 +338,7 @@ export const Card = ({
             className="pointer-events-none"
             style={{ fontSize: statsSize + "em" }}>
             <div className="absolute top-[57.3%] right-[28.5%] left-[27.5%]">
-              <img src="/character-card-overlay.png" draggable={false} />
+              <img src="/card-overlays/stats.png" draggable={false} />
             </div>
             <div className="absolute top-[55.7%] left-[40.5%] font-statblock text-black">
               {stats.healthPoints}
@@ -293,7 +354,10 @@ export const Card = ({
             className="pointer-events-none"
             style={{ fontSize: statsSize + "em" }}>
             <div className={positionStatOverlay}>
-              <img src="/monster-card-overlay.png" draggable={false} />
+              <img
+                src="/card-overlays/stats-with-evasion.png"
+                draggable={false}
+              />
             </div>
 
             <div className={HealthOverlay}>{stats.healthPoints}</div>

@@ -1,5 +1,7 @@
+import { useSyncExternalStore } from "react";
 import { useLanguageContext } from "../contexts/language-context";
 import { Card, CardType } from "./card";
+import { getBoardZoomed, subscribeBoardZoomed } from "./board-transform";
 import {
   normalizeTooltips,
   TooltipComponent,
@@ -8,7 +10,7 @@ import {
 import type { SerializedCounter, TemporaryEffect } from "@/shared/api";
 
 interface CardHoverPreviewProps {
-  card: { slug: string; globalId?: number } | CardType;
+  card?: { slug: string; globalId?: number; parent?: string } | CardType;
   stats?: {
     healthPoints: number;
     attackPoints: number;
@@ -31,38 +33,53 @@ export const CardHoverPreview = ({
   orientation = "portrait",
 }: CardHoverPreviewProps) => {
   const { t } = useLanguageContext();
+  const zoomed = useSyncExternalStore(
+    subscribeBoardZoomed,
+    getBoardZoomed,
+    () => false,
+  );
   const tooltips = normalizeTooltips(tooltip);
   const hasTooltips =
     tooltips.length > 0 &&
     tooltips.some((t) => ("enabled" in t ? t.enabled : t.capable !== true));
+  const tooltipList = hasTooltips ? (
+    <div className="flex flex-col gap-2">
+      {tooltips.map((t, index) => (
+        <TooltipComponent key={index} tooltip={t} />
+      ))}
+    </div>
+  ) : null;
+  const eternalLabel = isEternal ? (
+    <div className="rounded-md bg-taupe-200 p-2 text-center font-main text-sm text-black uppercase">
+      -{t("common.eternal")}-
+    </div>
+  ) : null;
+  const previewWidth =
+    22 * (orientation === "portrait" ? 750 / 1024 : 1024 / 750);
+  const previewCard =
+    !zoomed && card !== undefined && typeof card === "object" && "slug" in card
+      ? card
+      : undefined;
+
+  if (!previewCard && !eternalLabel && !tooltipList) return null;
 
   return (
-    <div className="flex w-min flex-col items-stretch gap-2.5">
-      {isEternal && (
-        <div className="rounded-md bg-taupe-200 p-2 text-center font-main text-sm text-black uppercase">
-          -{t("common.eternal")}-
-        </div>
+    <div
+      className="flex w-min flex-col items-stretch gap-2.5"
+      style={previewCard ? undefined : { minWidth: `${previewWidth}em` }}>
+      {eternalLabel}
+      {previewCard && (
+        <Card
+          globalId={previewCard.globalId}
+          card={{ slug: previewCard.slug, parent: previewCard.parent }}
+          stats={stats}
+          effects={effects}
+          counters={counters}
+          size={22}
+          orientation={orientation}
+        />
       )}
-      <div>
-        {typeof card === "object" && "slug" in card && (
-          <Card
-            globalId={card.globalId}
-            card={{ slug: card.slug }}
-            stats={stats}
-            effects={effects}
-            counters={counters}
-            size={22}
-            orientation={orientation}
-          />
-        )}
-      </div>
-      {hasTooltips ? (
-        <div className="flex flex-col gap-2">
-          {tooltips.map((t, index) => (
-            <TooltipComponent key={index} tooltip={t} />
-          ))}
-        </div>
-      ) : null}
+      {tooltipList}
     </div>
   );
 };
