@@ -6,30 +6,35 @@ import type {
 } from "@/shared/api";
 import { cn } from "@/utils/cn";
 import { Dice } from "@/icons/dice";
-import { Card, CardImage } from "./card";
+import { Card } from "./card";
 import { usePopoverContext } from "./contexts/popover-context";
+import { useRevealGesture } from "./use-reveal-gesture";
 import { useLanguageContext } from "../contexts/language-context";
 import { replaceTokens } from "@/utils/replaceToken";
+
 interface StackElementIconProps {
   element: StackElement;
 }
 
 export const StackElementIcon = ({ element }: StackElementIconProps) => {
   const { setPopover, closePopover } = usePopoverContext();
-
-  const onHover = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+  const revealProps = useRevealGesture((target) => {
     setPopover({
-      anchor: rect,
-      content: <PopoverContent element={element} />,
+      anchor: target.getBoundingClientRect(),
+      anchorElement: target,
+      content: (
+        <div className="flex flex-col items-center gap-3">
+          <PopoverIcon element={element} />
+          <PopoverContent element={element} />
+        </div>
+      ),
     });
-  };
+  }, closePopover);
 
   return (
     <div
-      className="flex shrink-0 items-center justify-center transition-transform hover:scale-110 ease-out-back"
-      onMouseEnter={onHover}
-      onMouseLeave={closePopover}>
+      {...revealProps}
+      className="flex shrink-0 items-center justify-center transition-transform ease-out-back hover:scale-110">
       <Icon element={element} />
     </div>
   );
@@ -38,6 +43,59 @@ export const StackElementIcon = ({ element }: StackElementIconProps) => {
 interface PopoverContentProps {
   element: StackElement;
 }
+
+const PopoverIcon = ({ element }: StackElementIconProps) => {
+  switch (element.type) {
+    case "diceRoll":
+      return (
+        <Dice
+          value={element.diceRoll}
+          className="size-24 shrink-0 rounded-[20%]"
+        />
+      );
+    case "diceWillRoll":
+    case "LootCardEffect":
+    case "effect":
+      return (
+        <Card
+          card={element.card}
+          orientation={element.card.orientation}
+          visualEffectBox={element.visualEffectBox}
+          size={22}
+        />
+      );
+    case "lootStep":
+      return (
+        <img
+          src="/stack-icons/loot-step.png"
+          className="size-24 shrink-0 rounded-[20%]"
+        />
+      );
+    case "endOfTurn":
+      return (
+        <img
+          src="/stack-icons/end-of-turn.png"
+          className="size-24 shrink-0 rounded-[20%]"
+        />
+      );
+    case "damage":
+      return (
+        <img
+          src={getDamageIcon(element.damage)}
+          alt="damage"
+          className="size-24 shrink-0 rounded-[20%]"
+        />
+      );
+    case "death":
+      return (
+        <img
+          src="/stack-icons/death.png"
+          alt="death"
+          className="size-24 shrink-0 rounded-[20%]"
+        />
+      );
+  }
+};
 
 const PopoverContent = ({ element }: PopoverContentProps) => {
   const { ts, t } = useLanguageContext();
@@ -48,30 +106,25 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
         key: "gameStep.stack.stackElement.cardRoll",
         interpolates: {
           player: `{{1}}`,
-          result: result,
+          result: `{{2}}`,
         },
       };
       const msg = replaceTokens(ts(serialized), [
         [
           `{{1}}`,
-          <span key="player" style={{ color: element.issuer.color }}>
+          <span
+            key="player"
+            className="font-bold"
+            style={{ color: element.issuer.color }}>
             {ts(element.issuer.nameKey)}
           </span>,
         ],
+        [`{{2}}`, <span className="font-bold text-white">{result}</span>],
       ]);
+
       return (
-        <div className="flex flex-col items-center gap-3">
-          {element.card && (
-            <Card
-              card={element.card}
-              orientation={element.card.orientation}
-              visualEffectBox={element.visualEffectBox}
-              size={22}
-            />
-          )}
-          <div className="flex max-w-64 flex-wrap place-content-center gap-1 px-2 text-center leading-tight text-taupe-400">
-            {msg}
-          </div>
+        <div className="max-w-64 px-2 text-center leading-tight text-taupe-400">
+          {msg}
         </div>
       );
     }
@@ -89,30 +142,23 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
       const msg = replaceTokens(ts(serialized), [
         [
           `{{1}}`,
-          <span key="player" style={{ color: element.issuer.color }}>
+          <span
+            key="player"
+            className="font-bold"
+            style={{ color: element.issuer.color }}>
             {ts(element.issuer.nameKey)}
           </span>,
         ],
         [
           `{{2}}`,
-          <span key="card" style={{ color: "white" }}>
+          <span key="card" className="font-bold text-white">
             {ts(element.card!.nameKey)}
           </span>,
         ],
       ]);
       return (
-        <div className="flex flex-col items-center gap-3">
-          {element.card && (
-            <Card
-              card={element.card}
-              orientation={element.card.orientation}
-              visualEffectBox={element.visualEffectBox}
-              size={22}
-            />
-          )}
-          <div className="flex max-w-64 flex-wrap place-content-center gap-1 px-2 text-center leading-tight text-taupe-400">
-            <span>{msg}</span>
-          </div>
+        <div className="max-w-64 px-2 text-center leading-tight text-taupe-400">
+          {msg}
         </div>
       );
     }
@@ -128,49 +174,40 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
       const msg = replaceTokens(ts(serialized), [
         [
           `{{1}}`,
-          <span key="player" style={{ color: element.issuer.color }}>
+          <span
+            key="player"
+            className="font-bold"
+            style={{ color: element.issuer.color }}>
             {ts(element.issuer.nameKey)}
           </span>,
         ],
         [
           `{{2}}`,
-          <span key="player" style={{ color: "white" }}>
+          <span key="player" className="font-bold text-white">
             {ts(element.card.nameKey)}
           </span>,
         ],
       ]);
       return (
-        <>
-          <Card
-            card={element.card}
-            orientation={element.card.orientation}
-            visualEffectBox={element.visualEffectBox}
-            size={22}
-          />
-          <div className="mt-3 flex max-w-64 flex-col gap-2 text-center leading-tight text-taupe-400">
-            {msg}
+        <div className="max-w-64 px-2 text-center leading-tight text-taupe-400">
+          {msg}
+          <div className="mt-1 flex flex-col items-center gap-1">
             <SelectionsList selections={element.targets} />
           </div>
-        </>
+        </div>
       );
     }
 
     case "effect": {
       return (
-        <>
-          <Card
-            card={element.card}
-            orientation={element.card.orientation}
-            visualEffectBox={element.visualEffectBox}
-            size={22}
-          />
-          <div className="mt-3 flex max-w-64 flex-col gap-2 text-center leading-tight text-taupe-400">
-            <span style={{ color: element.issuer.color }} className="font-bold">
-              {ts(element.issuer.nameKey)}
-            </span>
+        <div className="max-w-64 px-2 text-center leading-tight text-taupe-400">
+          <span style={{ color: element.issuer.color }} className="font-bold">
+            {ts(element.issuer.nameKey)}
+          </span>
+          <div className="mt-1 flex flex-col items-center gap-1">
             <SelectionsList selections={element.targets} />
           </div>
-        </>
+        </div>
       );
     }
 
@@ -179,7 +216,7 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
         key: "gameStep.stack.stackElement.loots",
         interpolates: {
           player: `{{1}}`,
-          value: element.nbLoots.toString(),
+          value: `{{2}}`,
         },
       };
       const msg = replaceTokens(ts(serialized), [
@@ -189,12 +226,16 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
             {ts(element.player.nameKey)}
           </span>,
         ],
+        [
+          `{{2}}`,
+          <span className="font-bold text-white">
+            {element.nbLoots.toString()}
+          </span>,
+        ],
       ]);
       return (
-        <div className="flex flex-col items-center gap-3">
-          <div className="max-w-64 px-2 text-center leading-tight text-taupe-400">
-            {msg}
-          </div>
+        <div className="max-w-64 px-2 text-center leading-tight text-taupe-400">
+          {msg}
         </div>
       );
     }
@@ -228,9 +269,9 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
         key: "gameStep.stack.stackElement.damageUsing",
         interpolates: {
           entity1: `{{1}}`,
-          value: element.damage.toString(),
-          entity2: `{{2}}`,
-          cardOrAttackRoll: `{{3}}`,
+          value: `{{2}}`,
+          entity2: `{{3}}`,
+          cardOrAttackRoll: `{{4}}`,
         },
       };
       const msg = replaceTokens(ts(serialized), [
@@ -238,17 +279,25 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
           `{{1}}`,
           <span className="font-bold" style={{ color: element.from.color }}>
             {ts(element.from.nameKey)}
+            <br />
           </span>,
         ],
         [
           `{{2}}`,
-          <span className="font-bold" style={{ color: element.receiver.color }}>
-            {ts(element.receiver.nameKey)}
+          <span className="font-bold text-white">
+            {element.damage.toString()}
           </span>,
         ],
         [
           `{{3}}`,
-          <span style={{ color: "white" }}>
+          <span className="font-bold" style={{ color: element.receiver.color }}>
+            {ts(element.receiver.nameKey)}
+            <br />
+          </span>,
+        ],
+        [
+          `{{4}}`,
+          <span className="font-bold text-white">
             {"slug" in element.source
               ? ts(element.source.nameKey)
               : t("gameStep.stack.stackElement.anAttackRoll")}
@@ -256,18 +305,8 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
         ],
       ]);
       return (
-        <div className="flex flex-col items-center gap-3">
-          {"slug" in element.source && (
-            <Card
-              card={element.source}
-              orientation={element.source.orientation}
-              visualEffectBox={element.visualEffectBox}
-              size={22}
-            />
-          )}
-          <div className="max-w-64 px-2 text-center leading-tight text-taupe-400">
-            {msg}
-          </div>
+        <div className="max-w-64 px-2 text-center leading-tight text-taupe-400">
+          {msg}
         </div>
       );
     }
@@ -296,7 +335,7 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
         ],
         [
           `{{3}}`,
-          <span style={{ color: "white" }}>
+          <span className="font-bold text-white">
             {"slug" in element.source
               ? ts(element.source.nameKey)
               : t("gameStep.stack.stackElement.anAttackRoll")}
@@ -334,7 +373,7 @@ const Icon = ({ element }: IconProps) => {
       return (
         <Dice
           value={element.diceRoll}
-          className="size-10 rounded-lg border-[0.15em] bg-taupe-700 p-0.5 text-red-500"
+          className="size-10 rounded-[20%] border-[0.15em] bg-taupe-700 p-0.5 text-red-500"
           style={{ borderColor }}
         />
       );
@@ -342,7 +381,7 @@ const Icon = ({ element }: IconProps) => {
       return (
         <Dice
           value={undefined}
-          className="size-10 rounded-lg border-[0.15em] bg-taupe-700 p-0.5 text-red-500"
+          className="size-10 rounded-[20%] border-[0.15em] bg-taupe-700 p-0.5 text-red-500"
           style={{ borderColor }}
         />
       );
@@ -350,22 +389,13 @@ const Icon = ({ element }: IconProps) => {
     case "LootCardEffect":
     case "effect": {
       return (
-        <div
-          className={cn(
-            "aspect-square overflow-hidden rounded-lg border-[0.15em] bg-taupe-700",
-          )}
-          style={{ borderColor }}>
-          <CardImage
-            sizes="2.5em"
-            card={element.card}
-            orientation={element.card.orientation}
-            className={
-              element.card.orientation === "portrait"
-                ? "translate-y-[5%] scale-155"
-                : "translate-y-[43%] scale-300"
-            }
-          />
-        </div>
+        <Card
+          containerClassName="size-10 rounded-[20%] border-[0.15em] bg-taupe-700"
+          containerStyle={{ borderColor }}
+          orientation={element.card.orientation}
+          card={element.card}
+          icon
+        />
       );
     }
 
@@ -373,11 +403,11 @@ const Icon = ({ element }: IconProps) => {
       return (
         <div
           className={cn(
-            "relative aspect-square size-10 overflow-hidden rounded-lg border-[0.15em] bg-taupe-700",
+            "relative aspect-square size-10 overflow-hidden rounded-[20%] border-[0.15em] bg-taupe-700",
           )}
           style={{ borderColor }}>
           <img
-            src="/lootcard.png"
+            src="/stack-icons/loot-step.png"
             className="absolute origin-bottom scale-155"
           />
         </div>
@@ -388,33 +418,21 @@ const Icon = ({ element }: IconProps) => {
       return (
         <div
           className={cn(
-            "aspect-square size-10 overflow-hidden rounded-lg border-[0.15em] bg-taupe-700",
+            "aspect-square size-10 overflow-hidden rounded-[20%] border-[0.15em] bg-taupe-700",
           )}
           style={{ borderColor }}>
-          <img src="/eot.png" />
+          <img src="/stack-icons/end-of-turn.png" />
         </div>
       );
     }
 
     case "damage":
-      const getDamageIcon = (damage: number) => {
-        switch (damage) {
-          case 1:
-            return "/damage-1.png";
-          case 2:
-            return "/damage-2.png";
-          case 3:
-            return "/damage-3.png";
-          default:
-            return "/damage-4.png";
-        }
-      };
       return (
         <img
           src={getDamageIcon(element.damage)}
           alt="damage"
           className={cn(
-            "size-10 shrink-0 rounded-lg border-[0.15em] bg-taupe-700 p-0.5",
+            "size-10 shrink-0 rounded-[20%] border-[0.15em] bg-taupe-700 p-0.5",
           )}
           style={{ borderColor }}
           draggable={false}
@@ -424,10 +442,10 @@ const Icon = ({ element }: IconProps) => {
     case "death":
       return (
         <img
-          src="/death.png"
+          src="/stack-icons/death.png"
           alt="death"
           className={cn(
-            "size-10 shrink-0 rounded-lg border-[0.15em] bg-taupe-700 p-0.5",
+            "size-10 shrink-0 rounded-[20%] border-[0.15em] bg-taupe-700 p-0.5",
           )}
           style={{ borderColor }}
           draggable={false}
@@ -564,5 +582,18 @@ export const SelectionContent = ({
     case "null":
     case "unknown":
       return "Unknown";
+  }
+};
+
+const getDamageIcon = (damage: number) => {
+  switch (damage) {
+    case 1:
+      return "/stack-icons/damage-1.png";
+    case 2:
+      return "/stack-icons/damage-2.png";
+    case 3:
+      return "/stack-icons/damage-3.png";
+    default:
+      return "/stack-icons/damage-4.png";
   }
 };

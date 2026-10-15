@@ -1,7 +1,7 @@
 import { HotkeyScope } from "@/utils/hotkey";
 import { socket } from "@/utils/socket";
 import { Button } from "../button";
-import { DiscordButton, ReportBugButton } from "../onboarding-layout";
+import { ReportBugButton } from "../onboarding-layout";
 import { useGameContext } from "./contexts/game-context";
 import { useMainMenuContext } from "./contexts/main-menu-context";
 import { usePromptContext } from "./contexts/prompt-context";
@@ -68,7 +68,7 @@ export const MainMenu = () => {
             String(now.getMinutes()).padStart(2, "0"),
             String(now.getSeconds()).padStart(2, "0"),
           ].join("-");
-          const filename = `four-souls_save_${datePart}_${timePart}.log`;
+          const filename = `four-souls_save_${datePart}_${timePart}.json`;
 
           const blob = new Blob([response.logs], { type: "text/plain" });
           const url = URL.createObjectURL(blob);
@@ -111,7 +111,7 @@ export const MainMenu = () => {
   };
 
   return (
-    <>
+    <div className="flex flex-col gap-4 overflow-auto p-4">
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="font-main text-3xl font-bold">
           {t("gameStep.mainMenu.title")}
@@ -182,9 +182,10 @@ export const MainMenu = () => {
           />
         </div>
       </div>
-      <LanguageSelection />
-      <DiscordButton />
-      <ReportBugButton />
-    </>
+      <div className="mt-3 flex place-content-stretch gap-2">
+        <ReportBugButton className="bg-taupe-600 shadow-lg" />
+        <LanguageSelection className="w-full bg-taupe-600 shadow-lg" />
+      </div>
+    </div>
   );
 };

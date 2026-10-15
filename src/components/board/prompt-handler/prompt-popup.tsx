@@ -245,7 +245,15 @@ export const PromptOption = ({
   });
 
   return (
-    <GenericOption option={option} onPress={onPress} selected={isSelected}>
+    <GenericOption
+      className={cn(
+        option.type !== "couplePlayerHand" &&
+          "transition-[scale,rotate] ease-out-back hover:scale-103 hover:rotate-1",
+        isSelected && "scale-103 rotate-1",
+      )}
+      option={option}
+      onPress={onPress}
+      selected={isSelected}>
       {onPress !== undefined && hotkey !== undefined && (
         <div className="absolute top-0 left-0 flex size-7 place-items-center overflow-hidden rounded-md bg-taupe-700 outline-3 outline-taupe-200">
           <img
@@ -260,112 +268,46 @@ export const PromptOption = ({
   );
 };
 
-export const GenericOption = ({
-  option,
-  onPress,
-  selected,
-  children,
-}: TemplateOptionProps<SelectionItem["type"]>) => {
-  switch (option.type) {
+export const GenericOption = (
+  props: TemplateOptionProps<SelectionItem["type"]>,
+) => {
+  switch (props.option.type) {
     case "player":
-      return (
-        <PlayerOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
-      );
+      return <PlayerOption {...(props as TemplateOptionProps<"player">)} />;
     case "monster":
-      return (
-        <MonsterOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
-      );
+      return <MonsterOption {...(props as TemplateOptionProps<"monster">)} />;
     case "cardEffect":
       return (
-        <CardEffectOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
+        <CardEffectOption {...(props as TemplateOptionProps<"cardEffect">)} />
       );
     case "string":
-      return (
-        <StringOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
-      );
+      return <StringOption {...(props as TemplateOptionProps<"string">)} />;
     case "stackElement":
       return (
         <StackElementOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
+          {...(props as TemplateOptionProps<"stackElement">)}
         />
       );
     case "chooseOne":
       return (
-        <ChooseOneOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
+        <ChooseOneOption {...(props as TemplateOptionProps<"chooseOne">)} />
       );
     case "deck":
-      return (
-        <DeckOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
-      );
+      return <DeckOption {...(props as TemplateOptionProps<"deck">)} />;
     case "card":
-      return (
-        <CardOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
-      );
+      return <CardOption {...(props as TemplateOptionProps<"card">)} />;
     case "couplePlayerHand":
       return (
         <CouplePlayerHandOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
+          {...(props as TemplateOptionProps<"couplePlayerHand">)}
         />
       );
     case "character":
       return (
-        <CharacterOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
+        <CharacterOption {...(props as TemplateOptionProps<"character">)} />
       );
     case "boolean":
-      return (
-        <BooleanOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
-      );
+      return <BooleanOption {...(props as TemplateOptionProps<"boolean">)} />;
     case "number":
       return (
         <NumberOption
@@ -387,10 +329,7 @@ export const GenericOption = ({
     case "serializedTranslation":
       return (
         <SerializedTranslationOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
+          {...(props as TemplateOptionProps<"serializedTranslation">)}
         />
       );
     case "object":
@@ -398,11 +337,12 @@ export const GenericOption = ({
     case "null":
     case "unknown":
     default:
-      return <div>{option.type}</div>;
+      return <div>{props.option.type}</div>;
   }
 };
 
 interface TemplateOptionProps<T extends SelectionItem["type"]> {
+  className: string;
   option: Extract<SelectionItem, { type: T }>;
   selected: boolean;
   onPress: (() => void) | undefined;
@@ -410,6 +350,7 @@ interface TemplateOptionProps<T extends SelectionItem["type"]> {
 }
 
 export const CardEffectOption = ({
+  className,
   option,
   onPress,
   children,
@@ -418,6 +359,7 @@ export const CardEffectOption = ({
   return (
     <div
       className={cn(
+        className,
         "relative flex flex-col items-center gap-2 p-2",
         onPress && "cursor-pointer",
       )}
@@ -435,6 +377,7 @@ export const CardEffectOption = ({
 };
 
 export const ChooseOneOption = ({
+  className,
   option,
   onPress,
   children,
@@ -443,6 +386,7 @@ export const ChooseOneOption = ({
   return (
     <div
       className={cn(
+        className,
         "relative flex flex-col items-center gap-2 p-2",
         onPress && "cursor-pointer",
       )}
@@ -460,6 +404,7 @@ export const ChooseOneOption = ({
 };
 
 export const PlayerOption = ({
+  className,
   option,
   onPress,
   selected,
@@ -469,6 +414,7 @@ export const PlayerOption = ({
   return (
     <div
       className={cn(
+        className,
         "flex flex-col items-center gap-2",
         onPress && "cursor-pointer",
       )}
@@ -496,6 +442,7 @@ export const PlayerOption = ({
 };
 
 export const MonsterOption = ({
+  className,
   option,
   selected,
   onPress,
@@ -506,6 +453,7 @@ export const MonsterOption = ({
   return (
     <div
       className={cn(
+        className,
         "flex flex-col items-center gap-2",
         onPress && "cursor-pointer",
       )}
@@ -533,6 +481,7 @@ export const MonsterOption = ({
 };
 
 export const DeckOption = ({
+  className,
   option,
   selected,
   onPress,
@@ -541,6 +490,7 @@ export const DeckOption = ({
   return (
     <div
       className={cn(
+        className,
         "flex flex-col items-center gap-2",
         onPress && "cursor-pointer",
       )}
@@ -571,11 +521,13 @@ export const SerializedTranslationOption = ({
   selected,
   onPress,
   children,
+  className,
 }: TemplateOptionProps<"serializedTranslation">) => {
   const { ts } = useLanguageContext();
   return (
     <div
       className={cn(
+        className,
         "relative flex w-max flex-row place-items-center gap-2 rounded-md border-2 bg-taupe-600 p-2",
         selected
           ? "border-blue-500 outline-2 outline-blue-400"
@@ -591,6 +543,7 @@ export const SerializedTranslationOption = ({
   );
 };
 export const StringOption = ({
+  className,
   option,
   selected,
   onPress,
@@ -599,6 +552,7 @@ export const StringOption = ({
   return (
     <div
       className={cn(
+        className,
         "relative flex w-max flex-row place-items-center gap-2 rounded-md border-2 bg-taupe-600 p-2",
         selected
           ? "border-blue-500 outline-2 outline-blue-400"
@@ -615,6 +569,7 @@ export const StringOption = ({
 };
 
 export const BooleanOption = ({
+  className,
   option,
   onPress,
   children,
@@ -624,6 +579,7 @@ export const BooleanOption = ({
   return (
     <div
       className={cn(
+        className,
         "relative flex w-max flex-row place-items-center gap-2 rounded-md border-2 bg-taupe-600 p-2",
         selected
           ? "border-blue-500 outline-2 outline-blue-400"
@@ -640,6 +596,7 @@ export const BooleanOption = ({
 };
 
 export const StackElementOption = ({
+  className,
   option,
   onPress,
   children,
@@ -648,6 +605,7 @@ export const StackElementOption = ({
   return (
     <div
       className={cn(
+        className,
         "relative m-1 rounded-md bg-taupe-900 p-4 pr-12 text-xl",
         selected && "outline-4 outline-blue-400",
         onPress && "cursor-pointer",
@@ -660,6 +618,7 @@ export const StackElementOption = ({
 };
 
 export const CardOption = ({
+  className,
   option,
   onPress,
   children,
@@ -668,6 +627,7 @@ export const CardOption = ({
   return (
     <div
       className={cn(
+        className,
         "relative flex flex-col items-center gap-2 p-2",
         onPress && "cursor-pointer",
       )}
@@ -684,6 +644,7 @@ export const CardOption = ({
 };
 
 export const CharacterOption = ({
+  className,
   option,
   onPress,
   children,
@@ -692,6 +653,7 @@ export const CharacterOption = ({
   return (
     <div
       className={cn(
+        className,
         "relative flex items-center gap-2 p-8",
         onPress && "cursor-pointer",
         selected && "rounded-2xl outline-6 outline-blue-400",
@@ -744,11 +706,13 @@ export const CouplePlayerHandOption = ({
   option,
   onPress,
   children,
+  className,
 }: TemplateOptionProps<"couplePlayerHand">) => {
   const { ts } = useLanguageContext();
   return (
     <div
       className={cn(
+        className,
         "relative flex items-end gap-2",
         onPress && "cursor-pointer",
       )}
@@ -783,6 +747,7 @@ export const CouplePlayerHandOption = ({
 };
 
 export const NumberOption = ({
+  className,
   option,
   onPress,
   children,
@@ -791,6 +756,7 @@ export const NumberOption = ({
   return (
     <div
       className={cn(
+        className,
         "relative flex w-max flex-row place-items-center gap-2 rounded-md border-2 bg-taupe-600 p-2",
         selected
           ? "border-blue-500 outline-2 outline-blue-400"

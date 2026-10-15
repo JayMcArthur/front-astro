@@ -1,16 +1,17 @@
+import type { SVGProps } from "react";
+
 export const Gear = ({
   className,
   onClick,
-}: {
-  className?: string;
-  onClick?: () => void;
-}) => {
+  ...props
+}: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={24}
       height={24}
       viewBox="0 0 24 24"
+      {...props}
       className={className}
       onClick={onClick}>
       <path

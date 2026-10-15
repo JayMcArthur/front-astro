@@ -14,7 +14,7 @@ export const RightPlayer = ({ player }: RightPlayerProps) => (
   <div
     key={player.name}
     className={
-      "col-start-3 row-span-3 flex flex-col place-content-center place-items-start gap-8"
+      "relative z-10 col-start-3 row-span-3 flex flex-col place-content-center place-items-start gap-8"
     }>
     <div
       className={cn(
@@ -34,7 +34,11 @@ export const RightPlayer = ({ player }: RightPlayerProps) => (
           gridTemplateRows: `repeat(${Math.min(player.inPlay.length + 1, MAX_ROWS)}, 1fr)`,
         }}>
         <OthersInPlays
-          cards={[player.character, ...player.inPlay]}
+          cards={
+            player.character !== undefined
+              ? [player.character, ...player.inPlay]
+              : player.inPlay
+          }
           player={player}
         />
       </div>

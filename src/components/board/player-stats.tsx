@@ -3,16 +3,19 @@ import type { Player, PlayerMe } from "@/shared/api";
 import { cn } from "@/utils/cn";
 import { HotkeyScope } from "@/utils/hotkey";
 import { socket } from "@/utils/socket";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { ImgButton } from "../button";
 import { Card } from "./card";
+import { EmoteBubble, useDisplayedEmote } from "./emote-bubble";
+import { EmoteWheel } from "./emote-wheel";
 import { useGameAnimation } from "./contexts/game-animation";
 import { useGameContext } from "./contexts/game-context";
 import { usePopoverContext } from "./contexts/popover-context";
 import { usePromptContext } from "./contexts/prompt-context";
 import { useToastContext } from "./contexts/toast-context";
 import { useTooltip } from "./use-tooltip";
+import { useRevealGesture } from "./use-reveal-gesture";
 import { useLanguageContext } from "../contexts/language-context";
 import { gainCoinsCheat } from "./cheats";
 import { Gear } from "@/icons/gear";
@@ -36,6 +39,9 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
   const { name, color, coins, souls, soulCards } = player;
 
   const isMe = state.me.name === name;
+  const canUseEmotes = isMe && !isSpectator;
+  const [isEmoteWheelOpen, setIsEmoteWheelOpen] = useState(false);
+  const displayedEmote = useDisplayedEmote(name);
 
   const declareAttack = () => {
     socket.emit("declareAttack", (response) => {
@@ -151,23 +157,33 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
     });
   };
 
-  const { setTooltip: setCoinTooltip, closeTooltip: closeCoinTooltip } =
-    useTooltip(
-      player.capabilities.canDonateCoinsTo === true && !isMe
-        ? {
-            enabled: true,
-            title: t("gameStep.giveCoins.tooltip.title"),
-            content: t("gameStep.giveCoins.tooltip.message"),
-          }
-        : {
-            title: t("gameStep.giveCoins.blockedTooltip.title"),
-            capable: player.capabilities.canDonateCoinsTo,
-          },
-    );
+  const { revealProps: coinReveal } = useTooltip(
+    player.capabilities.canDonateCoinsTo === true && !isMe
+      ? {
+          enabled: true,
+          title: t("gameStep.giveCoins.tooltip.title"),
+          content: t("gameStep.giveCoins.tooltip.message"),
+        }
+      : {
+          title: t("gameStep.giveCoins.blockedTooltip.title"),
+          capable: player.capabilities.canDonateCoinsTo,
+        },
+  );
 
-  const { setTooltip: setSwitchToTooltip, closeTooltip: closeSwitchToTooltip } =
-    useTooltip(
-      player.capabilities.canSwitchTo === true && !isMe
+  const { revealProps: menuReveal } = useTooltip({
+    enabled: true,
+    title: t("gameStep.mainMenu.title"),
+    hotkey: "escape",
+  });
+
+  const { revealProps: switchReveal } = useTooltip(
+    canUseEmotes
+      ? {
+          enabled: true,
+          title: "Emotes",
+          hotkey: "r",
+        }
+      : player.capabilities.canSwitchTo === true && !isMe
         ? {
             enabled: true,
             title: t("capability.SwitchToCopy"),
@@ -177,7 +193,7 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
             title: t("capability.cannotSwitchToCopy"),
             capable: player.capabilities.canSwitchTo,
           },
-    );
+  );
 
   const nextMeInstance = state.players.find(
     (p) => p.capabilities.canSwitchTo === true,
@@ -190,34 +206,88 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
     scopes: [HotkeyScope.Main],
   });
 
+  const soulsReveal = useRevealGesture((element) => {
+    if (soulCards.length === 0) return;
+    setPopover({
+      anchor: element.getBoundingClientRect(),
+      anchorElement: element,
+      content: (
+        <div className="flex w-max flex-nowrap gap-4">
+          {soulCards.map((card, index) => (
+            <Card
+              card={card}
+              key={index}
+              size={22}
+              orientation={card.orientation}
+            />
+          ))}
+        </div>
+      ),
+    });
+  }, closePopover);
+
   return (
     <div
       className={cn(
         "flex place-items-center gap-16 rounded-xl text-white outline-[0.2em] outline-transparent duration-500",
         className,
       )}>
-      <p
-        className={cn(
-          "text-stroke inline-flex place-items-center gap-1 text-center font-alt-stats font-bold uppercase",
-          player.capabilities.canSwitchTo === true
-            ? "cursor-pointer transition-transform duration-100 hover:scale-108 ease-out-back"
-            : "cursor-not-allowed",
-        )}
-        style={{ color }}
-        onMouseEnter={setSwitchToTooltip}
-        onMouseLeave={closeSwitchToTooltip}
-        onClick={onSwitchToCopyPress}>
-        {isNextInstance && (
-          <img src="/input-prompts/keyboard_s_outline.svg" className="size-6" />
-        )}
-        <TeamIcon team={player.team} className="icon-shadow size-5 shrink-0" />
-        {name}
-      </p>
       <div
-        onMouseEnter={setCoinTooltip}
-        onMouseLeave={closeCoinTooltip}
         className={cn(
-          "relative flex items-center gap-1",
+          "relative",
+          (isEmoteWheelOpen || displayedEmote) && "z-50",
+        )}>
+        {displayedEmote && (
+          <EmoteBubble key={displayedEmote.key} type={displayedEmote.type} />
+        )}
+        {canUseEmotes && (
+          <EmoteWheel
+            open={isEmoteWheelOpen}
+            onOpenChange={setIsEmoteWheelOpen}
+          />
+        )}
+        <p
+          className={cn(
+            "text-stroke inline-flex place-items-center gap-1 text-center font-alt-stats font-bold uppercase",
+            canUseEmotes || player.capabilities.canSwitchTo === true
+              ? "cursor-pointer transition-transform duration-100 hover:scale-108"
+              : "cursor-not-allowed",
+          )}
+          style={{ color }}
+          aria-expanded={canUseEmotes ? isEmoteWheelOpen : undefined}
+          {...switchReveal}
+          onClick={() => {
+            if (canUseEmotes) {
+              setIsEmoteWheelOpen((open) => !open);
+              return;
+            }
+            onSwitchToCopyPress();
+          }}>
+          {canUseEmotes && (
+            <img
+              src="/input-prompts/keyboard_r_outline.svg"
+              className="size-6"
+              alt=""
+            />
+          )}
+          {isNextInstance && !canUseEmotes && (
+            <img
+              src="/input-prompts/keyboard_s_outline.svg"
+              className="size-6"
+              alt=""
+            />
+          )}
+          <TeamIcon
+            team={player.team}
+            className="icon-shadow size-5 shrink-0"
+          />
+          {name}
+        </p>
+      </div>
+      <div
+        {...coinReveal}
+        className={cn(
+          "relative flex items-center gap-1 transition-[scale] ease-out-back hover:scale-110",
           player.capabilities.canDonateCoinsTo === true
             ? "cursor-pointer transition-[scale] ease-out-back hover:scale-110"
             : "cursor-not-allowed",
@@ -249,7 +319,7 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
         )}
         <img
           ref={(el) => registerPlayerAnchor(name, "coins", el)}
-          src="/coin.png"
+          src="/ui/coin.png"
           className="size-6 rounded-full"
           draggable={false}
         />
@@ -258,6 +328,7 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
       </div>
 
       <div
+        {...soulsReveal}
         ref={(el) => {
           soulAnchorRef.current = el;
           registerPlayerAnchor(name, "souls", el);
@@ -265,36 +336,13 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
         className={cn(
           "icon-shadow flex flex-row-reverse items-center",
           souls > 0 && "cursor-pointer",
-        )}
-        onMouseEnter={() => {
-          if (soulAnchorRef.current && soulCards.length > 0) {
-            const rect = soulAnchorRef.current.getBoundingClientRect();
-            setPopover({
-              anchor: rect,
-              content: (
-                <div className="flex w-max flex-nowrap gap-4">
-                  {soulCards.map((card, index) => (
-                    <Card
-                      card={card}
-                      key={index}
-                      size={22}
-                      orientation={card.orientation}
-                    />
-                  ))}
-                </div>
-              ),
-            });
-          }
-        }}
-        onMouseLeave={() => {
-          closePopover();
-        }}>
+        )}>
         {alternateSoulSequence(souls)
           .toReversed()
           .map((type, index) => {
             return (
               <img
-                src={`/${type === 1 ? "soul-1" : "soul-2"}.png`}
+                src={`/ui/${type === 1 ? "soul-1" : "soul-2"}.png`}
                 className={cn(type === 1 ? "h-6" : "h-8", souls > 2 && "-ml-3")}
                 draggable={false}
                 key={index}
@@ -306,11 +354,10 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
       {isMe && (
         <div className="flex items-center gap-2">
           <ImgButton
-            frontImage="End_turn_Icon.png"
-            frontHoverImage="End_turn_Icon_hover.png"
-            backgroundImage="Button_Small.png"
-            className="rotate-5"
-            enabledClassName="hover:rotate-10"
+            frontImage="ui/action-end-turn.png"
+            frontHoverImage="ui/action-end-turn-hover.png"
+            backgroundImage="ui/button-backdrop.png"
+            className="rotate-5 hover:rotate-10"
             size={64}
             disabled={state.me.capabilities.endTurn !== true}
             hotkey="e"
@@ -350,17 +397,16 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
           <ImgButton
             frontImage={
               state.me.isEngagedInPurchase
-                ? "Cancel_Purchase_Icon.png"
-                : "Declare_Purchase_Icon.png"
+                ? "ui/action-cancel-purchase.png"
+                : "ui/action-declare-purchase.png"
             }
             frontHoverImage={
               state.me.isEngagedInPurchase
-                ? "Cancel_Purchase_Icon_hover.png"
-                : "Declare_Purchase_Icon_hover.png"
+                ? "ui/action-cancel-purchase-hover.png"
+                : "ui/action-declare-purchase-hover.png"
             }
-            className="-rotate-5"
-            enabledClassName="hover:rotate-0"
-            backgroundImage="Button_Small.png"
+            className="-rotate-5 hover:rotate-0"
+            backgroundImage="ui/button-backdrop.png"
             size={64}
             disabled={
               state.me.isEngagedInPurchase
@@ -418,26 +464,27 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
             }
           />
           <ImgButton
+            className="-rotate-5 hover:rotate-0"
             frontImage={
-              state.me.character.stats.isEngagedInCombat
-                ? "Roll_Icon.png"
-                : "Declare_Attack_Icon.png"
+              state.me.character && state.me.character.stats.isEngagedInCombat
+                ? "ui/action-roll.png"
+                : "ui/action-declare-attack.png"
             }
             frontHoverImage={
-              state.me.character.stats.isEngagedInCombat
-                ? "Roll_Icon_hover.png"
-                : "Declare_Attack_Icon_hover.png"
+              state.me.character && state.me.character.stats.isEngagedInCombat
+                ? "ui/action-roll-hover.png"
+                : "ui/action-declare-attack-hover.png"
             }
-            backgroundImage="Button_Small.png"
+            backgroundImage="ui/button-backdrop.png"
             size={64}
             disabled={
-              state.me.character.stats.isEngagedInCombat
+              state.me.character && state.me.character.stats.isEngagedInCombat
                 ? state.me.capabilities.rollDice !== true
                 : state.me.capabilities.declareAttack !== true
             }
             hotkey="a"
             onClick={() =>
-              state.me.character.stats.isEngagedInCombat
+              state.me.character && state.me.character.stats.isEngagedInCombat
                 ? block(
                     t("gameStep.rollDiceButton.blockedTooltip.title"),
                     state.me.capabilities.rollDice,
@@ -450,7 +497,7 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
                   )
             }
             tooltip={
-              state.me.character.stats.isEngagedInCombat
+              state.me.character && state.me.character.stats.isEngagedInCombat
                 ? state.me.capabilities.rollDice !== true
                   ? {
                       title: t("gameStep.rollDiceButton.blockedTooltip.title"),
@@ -475,6 +522,7 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
           />
           {!isSpectator && (
             <Gear
+              {...menuReveal}
               className="icon-shadow ml-6 size-6 cursor-pointer transition-[scale,rotate] ease-out-back hover:scale-120 hover:rotate-10"
               onClick={openMenu}
             />

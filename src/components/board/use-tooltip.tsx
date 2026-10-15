@@ -1,8 +1,12 @@
 import { cn } from "@/utils/cn";
-import { usePopoverContext } from "./contexts/popover-context";
+import {
+  subscribePopoverAnchorCleared,
+  usePopoverContext,
+} from "./contexts/popover-context";
 import type { SerializedTranslation } from "@/shared/api";
 import { useLanguageContext } from "../contexts/language-context";
 import { useCallback, useLayoutEffect, useState } from "react";
+import { useRevealGesture } from "./use-reveal-gesture";
 
 type TooltipType = "denied" | "warning" | "gold";
 
@@ -69,52 +73,67 @@ export const useTooltip = (tooltip: Tooltip | Tooltip[] | undefined) => {
   const tooltips = normalizeTooltips(tooltip);
   const tooltipKey = getTooltipKey(tooltip);
 
-  const [anchor, setAnchor] = useState<{
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  }>();
+  const [anchorEl, setAnchorEl] = useState<Element | null>(null);
 
   useLayoutEffect(() => {
-    if (anchor === undefined) return;
+    if (anchorEl === null || !anchorEl.isConnected) return;
 
-    const hasTooltips =
-      tooltips.length > 0 &&
-      tooltips.some((t) => ("enabled" in t ? t.enabled : t.capable !== true));
+    const visibleCount = tooltips.filter((t) =>
+      "enabled" in t ? t.enabled : t.capable !== true,
+    ).length;
 
-    if (!hasTooltips) {
+    if (visibleCount === 0) {
       closePopover();
       return;
     }
 
+    const multiple = visibleCount > 1;
+
     setPopover({
-      anchor,
-      withWrapper: false,
+      anchor: anchorEl.getBoundingClientRect(),
+      anchorElement: anchorEl,
+      withWrapper: multiple,
       content: (
-        <div className="flex flex-col gap-1">
+        <div className={cn("flex flex-col", multiple ? "gap-2" : "gap-1")}>
           {tooltips.map((t, index) => (
             <TooltipComponent key={index} tooltip={t} />
           ))}
         </div>
       ),
     });
-  }, [tooltipKey, anchor]);
+  }, [tooltipKey, anchorEl]);
 
-  const setTooltip = useCallback((target: Element | React.MouseEvent<Element>) => {
-    const el = target instanceof Element ? target : target.currentTarget;
-    setAnchor(el.getBoundingClientRect());
-  }, []);
+  const setTooltip = useCallback(
+    (target: Element | React.MouseEvent<Element>) => {
+      const el = target instanceof Element ? target : target.currentTarget;
+      setAnchorEl(el);
+    },
+    [],
+  );
 
   const closeTooltip = useCallback(() => {
-    setAnchor(undefined);
+    setAnchorEl(null);
     closePopover();
   }, [closePopover]);
 
   // Close on unmount (layout so a remounted sibling can reopen before paint).
   useLayoutEffect(() => () => closePopover(), [closePopover]);
 
-  return { setTooltip, closeTooltip };
+  // Declared after the unmount close so this unsubscribes first and does not
+  // set state on an unmounted owner.
+  useLayoutEffect(
+    () =>
+      subscribePopoverAnchorCleared((anchor) => {
+        setAnchorEl((current) => (current === anchor ? null : current));
+      }),
+    [],
+  );
+
+  const revealProps = useRevealGesture((element) => {
+    setAnchorEl(element);
+  }, closeTooltip);
+
+  return { setTooltip, closeTooltip, revealProps };
 };
 
 export const TooltipComponent = ({ tooltip }: { tooltip: Tooltip }) => {
@@ -137,7 +156,7 @@ export const TooltipComponent = ({ tooltip }: { tooltip: Tooltip }) => {
   return (
     <div
       className={cn(
-        "relative w-full gap-1 overflow-hidden rounded-2xl border-3 border-taupe-700 bg-taupe-950 p-3 px-4 text-center",
+        "relative flex w-full flex-col gap-1 overflow-hidden rounded-2xl border-3 border-taupe-700 bg-taupe-950 p-3 px-4 text-center",
         type === "denied" && "border-red-950",
         type === "warning" && "border-yellow-900",
         type === "gold" && "border-yellow-600",

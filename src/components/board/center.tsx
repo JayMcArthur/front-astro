@@ -157,11 +157,13 @@ export const Center = () => {
           promptId,
           isUnique: false,
           prompt: t("gameStep.attack.popup.title"),
-          options: state.monsters.inPlay.map((card, index) => ({
-            type: "card",
-            payload: card.top,
-            index,
-          })),
+          options: state.monsters.inPlay
+            .filter((c) => !c.top.indomitable)
+            .map((card, index) => ({
+              type: "card",
+              payload: card.top,
+              index,
+            })),
           minCount: 1,
           maxCount: 1,
           onSubmit: function (selections): void {
@@ -246,6 +248,7 @@ export const Center = () => {
                 onHoverPopover={() => (
                   <CardHoverPreview
                     card={soul}
+                    orientation={soul.orientation}
                     counters={soul.counters}
                     tooltip={{
                       enabled: true,
@@ -303,6 +306,7 @@ export const Center = () => {
       {state.room && activeRoom && (
         <div className="flex flex-col gap-3">
           <Pile
+            size={146}
             cards={state.room.discard}
             onPileDetailsClick={
               state.room.discard.length > 1
@@ -322,6 +326,7 @@ export const Center = () => {
             orientation="landscape"
           />
           <Pile
+            size={146}
             globalId={SpecialGlobalIds.Room}
             cheats={
               isCheatViewOpen
@@ -336,6 +341,7 @@ export const Center = () => {
             orientation="landscape"
           />
           <Pile
+            size={146}
             cards={state.room.inPlay.map((card) => ({
               slug: card.slug,
               globalId: card.globalId,
@@ -474,43 +480,24 @@ export const Center = () => {
                   () => purchaseTreasure("top"),
                 )
               }
-              tooltip={[
-                {
-                  capable: state.me.capabilities.buyTreasure,
-                  title: t("gameStep.purchase.shop.blockedTooltip.title"),
-                },
-                {
-                  enabled: true,
-                  title: t("gameStep.purchase.shop.price", {
-                    value: String(state.treasure.topDeckPrice),
-                  }),
-                  type: "gold",
-                },
-              ]}
-              onHoverPopover={
-                state.treasure.firstCardTreasureDeck &&
-                (() => (
-                  <CardHoverPreview
-                    card={
-                      state.treasure.firstCardTreasureDeck ??
-                      CardType.TreasureCard
-                    }
-                    tooltip={[
-                      {
-                        capable: state.me.capabilities.buyTreasure,
-                        title: t("gameStep.purchase.shop.blockedTooltip.title"),
-                      },
-                      {
-                        enabled: true,
-                        title: t("gameStep.purchase.shop.price", {
-                          value: String(state.treasure.topDeckPrice),
-                        }),
-                        type: "gold",
-                      },
-                    ]}
-                  />
-                ))
-              }
+              onHoverPopover={() => (
+                <CardHoverPreview
+                  card={state.treasure.firstCardTreasureDeck}
+                  tooltip={[
+                    {
+                      capable: state.me.capabilities.buyTreasure,
+                      title: t("gameStep.purchase.shop.blockedTooltip.title"),
+                    },
+                    {
+                      enabled: true,
+                      title: t("gameStep.purchase.shop.price", {
+                        value: String(state.treasure.topDeckPrice),
+                      }),
+                      type: "gold",
+                    },
+                  ]}
+                />
+              )}
             />
           </div>
           {state.treasure.inPlay.map((card, index) => (
@@ -545,6 +532,7 @@ export const Center = () => {
                 onHoverPopover={() => (
                   <CardHoverPreview
                     card={card}
+                    orientation={card.orientation}
                     tooltip={[
                       {
                         capable: state.me.capabilities.buyTreasure,
@@ -617,12 +605,13 @@ export const Center = () => {
                 }),
               )}
               disabled={state.monsters.capabilities.targetableDeck !== true}
-              onHoverPopover={
-                monsterDeckAttackRequirement
-                  ? () => (
-                      <CardHoverPreview
-                        card={monsterDeckAttackRequirement.source}
-                        tooltip={[
+              onHoverPopover={() => (
+                <CardHoverPreview
+                  card={monsterDeckAttackRequirement?.source}
+                  orientation={monsterDeckAttackRequirement?.source.orientation}
+                  tooltip={
+                    monsterDeckAttackRequirement
+                      ? [
                           {
                             capable: state.monsters.capabilities.targetableDeck,
                             title: t("gameStep.attack.blockedTooltip.title"),
@@ -638,11 +627,14 @@ export const Center = () => {
                               },
                             ),
                           },
-                        ]}
-                      />
-                    )
-                  : undefined
-              }
+                        ]
+                      : {
+                          capable: state.monsters.capabilities.targetableDeck,
+                          title: t("gameStep.attack.blockedTooltip.title"),
+                        }
+                  }
+                />
+              )}
               onClickTopCardHotkey={
                 targetableMonsters.includes("top")
                   ? `${targetableMonsters.indexOf("top") + 1}`
@@ -657,10 +649,6 @@ export const Center = () => {
                   },
                 )
               }
-              tooltip={{
-                capable: state.monsters.capabilities.targetableDeck,
-                title: t("gameStep.attack.blockedTooltip.title"),
-              }}
             />
           </div>
           {state.monsters.inPlay.map((card) => {
@@ -728,6 +716,7 @@ export const Center = () => {
                       counters={card.top.counters}
                       stats={card.top.stats}
                       effects={card.top.stats?.temporaryEffect}
+                      orientation={card.top.orientation}
                       tooltip={[
                         {
                           capable: targetable,

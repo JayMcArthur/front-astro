@@ -85,7 +85,6 @@ export const Me = () => {
   }, [state.me.pendingSelection, addPrompt, removePrompt, toast]);
 
   const onTargetableCardClick = (card: InPlayMeCard) => {
-    console.log("Attacking monster with card:", card);
     socket.emit("attackMonster", { card }, (response) => {
       if (response.status === 400)
         toast(
@@ -192,7 +191,11 @@ export const Me = () => {
     }
   };
 
-  const targetableCards = [state.me.character, ...state.me.inPlay]
+  const targetableCards = (
+    state.me.character !== undefined
+      ? [state.me.character, ...state.me.inPlay]
+      : state.me.inPlay
+  )
     .filter(
       (card) =>
         !isHandUp &&
@@ -208,7 +211,7 @@ export const Me = () => {
     .slice(0, 9);
 
   return (
-    <div className="col-start-2 row-start-3 flex flex-col place-content-center place-items-center gap-2">
+    <div className="relative z-10 col-start-2 row-start-3 flex flex-col place-content-center place-items-center gap-2">
       <PlayerStats player={state.me} className="min-w-0" />
       <div
         className={cn(
@@ -221,7 +224,10 @@ export const Me = () => {
           style={{
             gridTemplateColumns: `repeat(${Math.min(state.me.inPlay.length + 1, 8)}, minmax(0, 1fr))`,
           }}>
-          {[state.me.character, ...state.me.inPlay].map((card, index) => {
+          {(state.me.character !== undefined
+            ? [state.me.character, ...state.me.inPlay]
+            : state.me.inPlay
+          ).map((card, index) => {
             return (
               <div
                 key={card.globalId}
@@ -245,6 +251,12 @@ export const Me = () => {
                   cards={[
                     {
                       slug: card.slug,
+                      parent:
+                        typeof card === "object" &&
+                        "parent" in card &&
+                        typeof card.parent === "string"
+                          ? card.parent
+                          : undefined,
                       charged: card.charged,
                       eternal: card.eternal,
                       engagedInCombat: card.stats?.isEngagedInCombat === true,

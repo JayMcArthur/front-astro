@@ -1,8 +1,13 @@
-import { type Room, type RoomBroadcast } from "@/shared/api";
+import {
+  type GameOverBroadcast,
+  type Room,
+  type RoomBroadcast,
+} from "@/shared/api";
 import { socket } from "@/utils/socket";
 import { storage } from "@/utils/storage";
 import { useEffect, useState } from "react";
 import { Board } from "../board/board";
+import { BoardScaleProvider } from "../board/contexts/board-scale-context";
 import { BoardSelectionProvider } from "../board/contexts/board-selection-context";
 import { GameAnimationProvider } from "../board/contexts/game-animation";
 import { GameProvider } from "../board/contexts/game-context";
@@ -19,10 +24,14 @@ import { SpectatorChrome } from "../spectator-chrome";
 import { StartStep } from "../onboarding/start-step";
 import { useLanguageContext } from "../contexts/language-context";
 import { usePromptContext } from "../board/contexts/prompt-context";
+import { GameOverPopup } from "../game-over-popup";
 
 export const GamePage = () => {
   const { t, ts, translateError } = useLanguageContext();
   const [room, setRoom] = useState<Room | null>(null);
+  const [gameOverBroadcast, setGameOverBroadcast] =
+    useState<GameOverBroadcast | null>(null);
+
   const { toast, dismissAll } = useToastContext();
   const { clearPrompts } = usePromptContext();
   const [tryingToRejoin, setTryingToRejoin] = useState<boolean>(true);
@@ -71,6 +80,10 @@ export const GamePage = () => {
       console.log("[🔌 Socket] Disconnected from socket");
     }
 
+    function onRoomGameOver() {
+      console.log("[🔌 Socket] Room game over");
+    }
+
     function onRoomChanged(room: Room | null) {
       console.log("[🔌 Socket] Room changed", room);
       setRoom(room);
@@ -80,6 +93,11 @@ export const GamePage = () => {
         storage.removeItem("roomId");
         setShowSpectatorJoinPopup(false);
       }
+    }
+
+    function onGameOver(gameOverBroadcast: GameOverBroadcast) {
+      console.log("[🔌 Socket] Game over", gameOverBroadcast);
+      setGameOverBroadcast(gameOverBroadcast);
     }
 
     function onGameQuit(userId: string) {
@@ -120,9 +138,11 @@ export const GamePage = () => {
     socket.on("connect_error", onConnectError);
     socket.on("disconnect", onDisconnect);
     socket.on("on:room:changed", onRoomChanged);
+    socket.on("on:room:gameover", onRoomGameOver);
     socket.on("on:user:assigned", onUserAssigned);
     socket.on("on:game:quit", onGameQuit);
     socket.on("on:room:broadcast", onRoomBroadcast);
+    socket.on("on:room:gameover", onGameOver);
     socket.onAnyOutgoing(onAnyOutgoing);
     socket.onAny(onAnyIncoming);
 
@@ -131,9 +151,11 @@ export const GamePage = () => {
       socket.off("connect_error", onConnectError);
       socket.off("disconnect", onDisconnect);
       socket.off("on:room:changed", onRoomChanged);
+      socket.off("on:room:gameover", onRoomGameOver);
       socket.off("on:user:assigned", onUserAssigned);
       socket.off("on:room:broadcast", onRoomBroadcast);
       socket.off("on:game:quit", onGameQuit);
+      socket.off("on:room:gameover", onGameOver);
       socket.offAnyOutgoing(onAnyOutgoing);
       socket.offAny(onAnyIncoming);
     };
@@ -153,11 +175,11 @@ export const GamePage = () => {
       />
     ) : null;
 
-  if (room?.game) {
-    return (
-      <SpectatorChrome
-        room={room}
-        onJoinAsPlayer={() => openSpectatorJoinPopup("join")}>
+  return (
+    <SpectatorChrome
+      room={room}
+      onJoinAsPlayer={() => openSpectatorJoinPopup("join")}>
+      {room?.game ? (
         <GameProvider
           room={room}
           state={room.game}
@@ -165,32 +187,48 @@ export const GamePage = () => {
           isSpectator={room.isSpectator}>
           <BoardSelectionProvider>
             <MainMenuProvider>
-              <GameAnimationProvider>
-                <Board />
-              </GameAnimationProvider>
+              <BoardScaleProvider>
+                <GameAnimationProvider>
+                  <Board />
+                </GameAnimationProvider>
+              </BoardScaleProvider>
             </MainMenuProvider>
           </BoardSelectionProvider>
         </GameProvider>
-        {spectatorPopup}
-      </SpectatorChrome>
-    );
-  }
-
-  return (
-    <SpectatorChrome
-      room={room}
-      onJoinAsPlayer={() => openSpectatorJoinPopup("join")}>
-      <OnboardingLayout
-        withHeader={room?.players.find((player) => player.isMe) === undefined}>
-        <BoardSelectionProvider>
-          <OnboardingPages
-            room={room}
-            tryingToRejoin={tryingToRejoin}
-            onSpectateSuccess={() => openSpectatorJoinPopup("entry")}
-          />
-        </BoardSelectionProvider>
-      </OnboardingLayout>
+      ) : (
+        <OnboardingLayout
+          withHeader={
+            room?.players.find((player) => player.isMe) === undefined
+          }>
+          <BoardSelectionProvider>
+            <OnboardingPages
+              room={room}
+              tryingToRejoin={tryingToRejoin}
+              onSpectateSuccess={() => openSpectatorJoinPopup("entry")}
+            />
+          </BoardSelectionProvider>
+        </OnboardingLayout>
+      )}
       {spectatorPopup}
+      {gameOverBroadcast && (
+        <GameOverPopup
+          gameOverBroadcast={gameOverBroadcast}
+          onClose={() => setGameOverBroadcast(null)}
+          onQuit={() =>
+            socket.emit("quitGame", (response) => {
+              if (response.status === 400)
+                console.log(
+                  "[🔌 Socket] Failed to quit game",
+                  translateError(response.error),
+                );
+              if (response.status === 200) {
+                console.log("[🔌 Socket] Game quit");
+                setGameOverBroadcast(null);
+              }
+            })
+          }
+        />
+      )}
     </SpectatorChrome>
   );
 };
