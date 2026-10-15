@@ -139,7 +139,6 @@ export const ImgButton = ({
   onClick,
   disabled,
   className,
-  enabledClassName,
   frontImageClassName,
   hotkey,
   hotkeyScope = [HotkeyScope.Main],
@@ -193,7 +192,6 @@ export const ImgButton = ({
             ? "cursor-not-allowed opacity-50 contrast-50"
             : "cursor-pointer hover:scale-110 hover:rotate-5 active:brightness-120"),
         className,
-        onClick && !disabled && enabledClassName,
       )}
       onClick={(e) => {
         lastPointer.x = e.clientX;
