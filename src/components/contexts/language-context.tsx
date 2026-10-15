@@ -4,6 +4,7 @@ import {
   boxes_dics,
   DEFAULT_LANGUAGE,
   isLanguageCode,
+  numberBoxes_dics,
   LANGUAGE_CODE,
   translation_dics,
 } from "@/utils/translate";
@@ -32,6 +33,7 @@ interface LanguageContextProps {
   t: <T extends TranslationKeys>(...args: TranslationFunctionArgs<T>) => string;
   translateError: (error: string | SerializedTranslation) => string;
   boxes: (typeof boxes_dics)["en"];
+  numberBoxes: (typeof numberBoxes_dics)["en"];
 }
 
 const LanguageContext = createContext<LanguageContextProps>({
@@ -41,6 +43,7 @@ const LanguageContext = createContext<LanguageContextProps>({
   t: () => "",
   translateError: () => "",
   boxes: {},
+  numberBoxes: {},
 });
 
 export const LanguageProvider = ({
@@ -104,6 +107,7 @@ export const LanguageProvider = ({
         t,
         translateError,
         boxes: boxes_dics[language],
+        numberBoxes: numberBoxes_dics[language],
       }}>
       {children}
     </LanguageContext.Provider>

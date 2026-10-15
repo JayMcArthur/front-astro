@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { cn } from "../../utils/cn";
 import { DEFAULT_LANGUAGE } from "../../utils/translate";
 import type {
+  EffectTextNumber,
   SerializedCounter,
   TemporaryEffect,
   VisualEffectBox,
@@ -42,6 +43,7 @@ interface CardProps {
     startIndex: number;
     endIndex: number;
   };
+  effectTextNumbers?: EffectTextNumber[];
   onPileDetailsClick?: () => void;
   onClick?: () => void;
   disabled?: boolean;
@@ -123,6 +125,7 @@ export const Card = ({
   orientation = "portrait",
   imageLanguage,
   effects,
+  effectTextNumbers,
   counters,
   globalId = 0,
   revealProps,
@@ -275,6 +278,16 @@ export const Card = ({
           />
         )}
 
+        {typeof card === "object" &&
+          effectTextNumbers?.map((effectTextNumber) => (
+            <EffectTextNumberComponent
+              key={effectTextNumber.occurrenceIndex}
+              card={card}
+              occurrenceIndex={effectTextNumber.occurrenceIndex}
+              value={effectTextNumber.value}
+            />
+          ))}
+
         {selectionIndex && (
           <SelectionIndexIndicator
             index={selectionIndex}
@@ -406,7 +419,7 @@ interface NormalizedBounds {
   left: number;
 }
 
-const CARD_TEXT_MARKER_PADDING_PERCENT = 0.5;
+const CARD_TEXT_MARKER_PADDING_PERCENT = 1.2;
 
 export const CARD_TEXT_MARKER_CLASS_NAME =
   "h-full w-full rounded-[0.3em] shadow-xl/50 inset-shadow-sm inset-shadow-white backdrop-brightness-120";
@@ -429,6 +442,27 @@ export const CardTextMarker = ({
     {children}
   </div>
 );
+
+export const EffectTextNumberComponent = ({
+  card,
+  occurrenceIndex,
+  value,
+}: {
+  card: { slug: string };
+  occurrenceIndex: number;
+  value: number;
+}) => {
+  const { numberBoxes } = useLanguageContext();
+  const numberBox = numberBoxes[card.slug][occurrenceIndex];
+  return (
+    <CardTextMarker bounds={numberBox}>
+      <div className="absolute inset-0 rounded-xs bg-[#ede7e2]" />
+      <div className="absolute inset-0 flex animate-pulse items-center justify-center font-main text-[6px] font-bold text-black">
+        {value}
+      </div>
+    </CardTextMarker>
+  );
+};
 
 export const VisualEffectBoxComponent = ({
   card,

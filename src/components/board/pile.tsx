@@ -1,4 +1,4 @@
-import type { TemporaryEffect } from "@/shared/api";
+import type { EffectTextNumber, TemporaryEffect } from "@/shared/api";
 import { HotkeyScope, shouldUseKey } from "@/utils/hotkey";
 import { clamp } from "@/utils/numbers";
 import { useRef } from "react";
@@ -31,6 +31,7 @@ type CardMetadata = {
       }
     | undefined;
   effects?: TemporaryEffect[];
+  effectTextNumbers?: EffectTextNumber[];
   parent?: string;
 };
 
@@ -252,6 +253,9 @@ export const Pile = ({
                 brightness={brightness}
                 stats={typeof card === "string" ? undefined : card.stats}
                 effects={typeof card === "string" ? undefined : card.effects}
+                effectTextNumbers={
+                  typeof card === "string" ? undefined : card.effectTextNumbers
+                }
                 counters={counters}
                 revealProps={
                   isTopCard

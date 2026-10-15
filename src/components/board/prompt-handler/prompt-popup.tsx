@@ -309,21 +309,11 @@ export const GenericOption = (
     case "boolean":
       return <BooleanOption {...(props as TemplateOptionProps<"boolean">)} />;
     case "number":
-      return (
-        <NumberOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
-        />
-      );
+      return <NumberOption {...(props as TemplateOptionProps<"number">)} />;
     case "effectTextNumber":
       return (
         <EffectTextNumberOption
-          option={option}
-          onPress={onPress}
-          selected={selected}
-          children={children}
+          {...(props as TemplateOptionProps<"effectTextNumber">)}
         />
       );
     case "serializedTranslation":

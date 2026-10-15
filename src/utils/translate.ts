@@ -2,10 +2,16 @@ import dic_en from "../../data/translations/en.json";
 import dic_es from "../../data/translations/es.json";
 import dic_fr from "../../data/translations/fr.json";
 import dic_pt from "../../data/translations/pt.json";
+
 import boxes_en from "../../data/boxes/en.json";
 import boxes_es from "../../data/boxes/es.json";
 import boxes_fr from "../../data/boxes/fr.json";
 import boxes_pt from "../../data/boxes/pt.json";
+
+import numberBoxes_en from "../../data/number-boxes/en.json";
+import numberBoxes_es from "../../data/number-boxes/es.json";
+import numberBoxes_fr from "../../data/number-boxes/fr.json";
+import numberBoxes_pt from "../../data/number-boxes/pt.json";
 
 const flattenDic = (
   obj: Record<string, any>,
@@ -21,22 +27,44 @@ const flattenDic = (
       }
     }),
   );
+
 export enum LANGUAGE_CODE {
   EN = "en",
   FR = "fr",
   PT = "pt",
   ES = "es",
 }
+
 export const translation_dics: Record<LANGUAGE_CODE, Record<string, string>> = {
   en: flattenDic(dic_en),
   es: flattenDic(dic_es),
   fr: flattenDic(dic_fr),
   pt: flattenDic(dic_pt),
 } as const;
+
 export const boxes_dics: Record<
   LANGUAGE_CODE,
   Record<string, { top: number; right: number; left: number; bottom: number }[]>
 > = { en: boxes_en, fr: boxes_fr, es: boxes_es, pt: boxes_pt };
+
+export interface NumberBox {
+  value: number;
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+export const numberBoxes_dics: Record<
+  LANGUAGE_CODE,
+  Record<string, NumberBox[]>
+> = {
+  en: numberBoxes_en,
+  fr: numberBoxes_fr,
+  es: numberBoxes_es,
+  pt: numberBoxes_pt,
+};
+
 export const cards_dics: Record<LANGUAGE_CODE, string> = {
   en: "en",
   fr: "fr",

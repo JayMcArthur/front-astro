@@ -264,6 +264,7 @@ export const Me = () => {
                         state.me.character === card &&
                         state.me.isEngagedInPurchase,
                       effects: card.stats?.temporaryEffect,
+                      effectTextNumbers: card.effectTextNumbers,
                       counters: card.counters,
                       stats: card.stats,
                     },
