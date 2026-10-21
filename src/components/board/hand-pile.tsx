@@ -29,6 +29,7 @@ export const HandPile = ({ player }: HandPileProps) => {
             ? revealedHand.map((c) => ({
                 slug: c.slug,
                 globalId: c.globalId,
+                effectTextNumbers: c.effectTextNumbers,
               }))
             : Array.from({ length: player.handSize }).map(
                 () => CardType.LootCard,
@@ -37,6 +38,7 @@ export const HandPile = ({ player }: HandPileProps) => {
         onHoverPopover={() => (
           <CardHoverPreview
             card={topCard}
+            effectTextNumbers={topCard?.effectTextNumbers}
             orientation={topCard?.orientation}
             tooltip={{
               enabled: true,

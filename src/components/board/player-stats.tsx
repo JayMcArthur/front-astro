@@ -216,6 +216,7 @@ export const PlayerStats = ({ player, className }: PlayerStatsProps) => {
           {soulCards.map((card, index) => (
             <Card
               card={card}
+              effectTextNumbers={card.effectTextNumbers}
               key={index}
               size={22}
               orientation={card.orientation}

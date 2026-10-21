@@ -277,6 +277,7 @@ export const Me = () => {
                   onHoverPopover={() => (
                     <CardHoverPreview
                       card={card}
+                      effectTextNumbers={card.effectTextNumbers}
                       stats={card.stats}
                       effects={card.stats?.temporaryEffect}
                       counters={card.counters}

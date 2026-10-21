@@ -29,8 +29,9 @@ export const TemporaryEffectCard = ({
         <div className="flex flex-col place-items-center gap-2">
           <Card
             card={effect.card}
-            orientation={effect.card.orientation}
+            effectTextNumbers={effect.card.effectTextNumbers}
             visualEffectBox={effect.visualEffectBox}
+            orientation={effect.card.orientation}
             size={22}
           />
           <div className="flex w-64 flex-col gap-4 text-center text-taupe-300">
@@ -50,6 +51,8 @@ export const TemporaryEffectCard = ({
       containerStyle={{ width: cardSize + "em", height: cardSize + "em" }}
       revealProps={revealProps}
       card={effect.card}
+      effectTextNumbers={effect.card.effectTextNumbers}
+      visualEffectBox={effect.visualEffectBox}
       orientation={effect.card.orientation}
       icon
     />

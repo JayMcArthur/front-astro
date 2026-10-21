@@ -248,6 +248,7 @@ export const Center = () => {
                 onHoverPopover={() => (
                   <CardHoverPreview
                     card={soul}
+                    effectTextNumbers={soul.effectTextNumbers}
                     orientation={soul.orientation}
                     counters={soul.counters}
                     tooltip={{
@@ -281,6 +282,10 @@ export const Center = () => {
               ? () => (
                   <CardHoverPreview
                     card={state.loot.discard[state.loot.discard.length - 1]}
+                    effectTextNumbers={
+                      state.loot.discard[state.loot.discard.length - 1]
+                        .effectTextNumbers
+                    }
                   />
                 )
               : undefined
@@ -319,6 +324,7 @@ export const Center = () => {
                 : () => (
                     <CardHoverPreview
                       card={firstDiscardRoom}
+                      effectTextNumbers={firstDiscardRoom.effectTextNumbers}
                       orientation={firstDiscardRoom.orientation}
                     />
                   )
@@ -401,6 +407,7 @@ export const Center = () => {
             onHoverPopover={() => (
               <CardHoverPreview
                 card={activeRoom}
+                effectTextNumbers={activeRoom.effectTextNumbers}
                 orientation={activeRoom.orientation}
                 stats={activeRoom.stats}
                 effects={
@@ -444,6 +451,11 @@ export const Center = () => {
                           state.treasure.discard.length - 1
                         ]
                       }
+                      effectTextNumbers={
+                        state.treasure.discard[
+                          state.treasure.discard.length - 1
+                        ].effectTextNumbers
+                      }
                     />
                   )
                 : undefined
@@ -483,6 +495,9 @@ export const Center = () => {
               onHoverPopover={() => (
                 <CardHoverPreview
                   card={state.treasure.firstCardTreasureDeck}
+                  effectTextNumbers={
+                    state.treasure.firstCardTreasureDeck?.effectTextNumbers
+                  }
                   tooltip={[
                     {
                       capable: state.me.capabilities.buyTreasure,
@@ -532,6 +547,7 @@ export const Center = () => {
                 onHoverPopover={() => (
                   <CardHoverPreview
                     card={card}
+                    effectTextNumbers={card.effectTextNumbers}
                     orientation={card.orientation}
                     tooltip={[
                       {
@@ -579,6 +595,11 @@ export const Center = () => {
                           state.monsters.discard.length - 1
                         ]
                       }
+                      effectTextNumbers={
+                        state.monsters.discard[
+                          state.monsters.discard.length - 1
+                        ].effectTextNumbers
+                      }
                     />
                   )
                 : undefined
@@ -608,6 +629,9 @@ export const Center = () => {
               onHoverPopover={() => (
                 <CardHoverPreview
                   card={monsterDeckAttackRequirement?.source}
+                  effectTextNumbers={
+                    monsterDeckAttackRequirement?.source.effectTextNumbers
+                  }
                   orientation={monsterDeckAttackRequirement?.source.orientation}
                   tooltip={
                     monsterDeckAttackRequirement
@@ -713,6 +737,7 @@ export const Center = () => {
                   onHoverPopover={() => (
                     <CardHoverPreview
                       card={card.top}
+                      effectTextNumbers={card.top.effectTextNumbers}
                       counters={card.top.counters}
                       stats={card.top.stats}
                       effects={card.top.stats?.temporaryEffect}

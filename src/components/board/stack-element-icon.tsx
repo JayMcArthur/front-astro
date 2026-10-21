@@ -59,6 +59,7 @@ const PopoverIcon = ({ element }: StackElementIconProps) => {
       return (
         <Card
           card={element.card}
+          effectTextNumbers={element.card.effectTextNumbers}
           orientation={element.card.orientation}
           visualEffectBox={element.visualEffectBox}
           size={22}
@@ -347,6 +348,7 @@ const PopoverContent = ({ element }: PopoverContentProps) => {
           {"slug" in element.source && (
             <Card
               card={element.source}
+              effectTextNumbers={element.source.effectTextNumbers}
               orientation={element.source.orientation}
               visualEffectBox={element.visualEffectBox}
               size={22}
@@ -394,6 +396,7 @@ const Icon = ({ element }: IconProps) => {
           containerStyle={{ borderColor }}
           orientation={element.card.orientation}
           card={element.card}
+          effectTextNumbers={element.card.effectTextNumbers}
           icon
         />
       );

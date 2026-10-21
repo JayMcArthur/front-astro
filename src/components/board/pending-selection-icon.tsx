@@ -92,6 +92,7 @@ const PopoverIcon = ({ pendingSelection }: Props) => {
       return (
         <Card
           card={card}
+          effectTextNumbers={card.effectTextNumbers}
           visualEffectBox={visualEffectBox}
           orientation={card.orientation}
           size={22}
@@ -162,6 +163,7 @@ const Icon = ({
           containerClassName="size-10 border-[0.15em] bg-taupe-700"
           containerStyle={{ borderColor: player.color }}
           card={reason.card}
+          effectTextNumbers={reason.card.effectTextNumbers}
           orientation={reason.card.orientation}
           icon
         />

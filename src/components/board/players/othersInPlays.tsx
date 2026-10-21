@@ -52,6 +52,7 @@ export const OthersInPlays = ({ cards, player }: OthersInPlaysProps) => {
               engagedInPurchase:
                 card === player.character && player.isEngagedInPurchase,
               effects: card.stats?.temporaryEffect,
+              effectTextNumbers: card.effectTextNumbers,
               counters: card.counters,
               stats: card.stats,
             },
@@ -62,6 +63,7 @@ export const OthersInPlays = ({ cards, player }: OthersInPlaysProps) => {
           onHoverPopover={() => (
             <CardHoverPreview
               card={card}
+              effectTextNumbers={card.effectTextNumbers}
               stats={card.stats}
               effects={card.stats?.temporaryEffect}
               counters={card.counters}

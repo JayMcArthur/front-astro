@@ -271,13 +271,6 @@ export const Card = ({
           </div>
         )}
 
-        {typeof card === "object" && visualEffectBox && (
-          <VisualEffectBoxComponent
-            card={card}
-            visualEffectBox={visualEffectBox}
-          />
-        )}
-
         {typeof card === "object" &&
           effectTextNumbers?.map((effectTextNumber) => (
             <EffectTextNumberComponent
@@ -285,8 +278,16 @@ export const Card = ({
               card={card}
               occurrenceIndex={effectTextNumber.occurrenceIndex}
               value={effectTextNumber.value}
+              size={size * 0.03}
             />
           ))}
+
+        {typeof card === "object" && visualEffectBox && (
+          <VisualEffectBoxComponent
+            card={card}
+            visualEffectBox={visualEffectBox}
+          />
+        )}
 
         {selectionIndex && (
           <SelectionIndexIndicator
@@ -419,25 +420,25 @@ interface NormalizedBounds {
   left: number;
 }
 
-const CARD_TEXT_MARKER_PADDING_PERCENT = 1.2;
-
 export const CARD_TEXT_MARKER_CLASS_NAME =
   "h-full w-full rounded-[0.3em] shadow-xl/50 inset-shadow-sm inset-shadow-white backdrop-brightness-120";
 
 export const CardTextMarker = ({
   bounds,
   children,
+  paddingPercent,
 }: {
   bounds: NormalizedBounds;
+  paddingPercent: number;
   children: React.ReactNode;
 }) => (
   <div
     className="absolute"
     style={{
-      top: `${bounds.top * 100 - CARD_TEXT_MARKER_PADDING_PERCENT}%`,
-      right: `${bounds.right * 100 - CARD_TEXT_MARKER_PADDING_PERCENT}%`,
-      bottom: `${bounds.bottom * 100 - CARD_TEXT_MARKER_PADDING_PERCENT}%`,
-      left: `${bounds.left * 100 - CARD_TEXT_MARKER_PADDING_PERCENT}%`,
+      top: `${bounds.top * 100 - paddingPercent}%`,
+      right: `${bounds.right * 100 - paddingPercent}%`,
+      bottom: `${bounds.bottom * 100 - paddingPercent}%`,
+      left: `${bounds.left * 100 - paddingPercent}%`,
     }}>
     {children}
   </div>
@@ -447,17 +448,21 @@ export const EffectTextNumberComponent = ({
   card,
   occurrenceIndex,
   value,
+  size,
 }: {
   card: { slug: string };
   occurrenceIndex: number;
   value: number;
+  size: number;
 }) => {
   const { numberBoxes } = useLanguageContext();
   const numberBox = numberBoxes[card.slug][occurrenceIndex];
   return (
-    <CardTextMarker bounds={numberBox}>
+    <CardTextMarker bounds={numberBox} paddingPercent={0.3}>
       <div className="absolute inset-0 rounded-xs bg-[#ede7e2]" />
-      <div className="absolute inset-0 flex animate-pulse items-center justify-center font-main text-[6px] font-bold text-black">
+      <div
+        className="absolute inset-0 flex animate-pulse items-center justify-center font-alt-stats font-bold text-black"
+        style={{ fontSize: size + "em" }}>
         {value}
       </div>
     </CardTextMarker>
@@ -519,7 +524,8 @@ export const VisualEffectBoxComponent = ({
         right: minRight,
         bottom: minBottom,
         left: minLeft,
-      }}>
+      }}
+      paddingPercent={1.2}>
       <div
         onClick={onClick}
         className={cn(CARD_TEXT_MARKER_CLASS_NAME, className)}

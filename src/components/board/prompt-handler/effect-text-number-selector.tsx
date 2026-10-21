@@ -43,7 +43,13 @@ export function EffectTextNumberSelector({
 
   return (
     <div className="relative">
-      <Card card={card} className="shadow-lg/30" size={42} />
+      <Card
+        card={card}
+        effectTextNumbers={card.effectTextNumbers}
+        orientation={card.orientation}
+        className="shadow-lg/30"
+        size={42}
+      />
       {options.map((option, index) => (
         <EffectTextNumberButton
           key={option.payload.occurrenceIndex}
@@ -76,7 +82,7 @@ function EffectTextNumberButton({
   });
 
   return (
-    <CardTextMarker bounds={box}>
+    <CardTextMarker bounds={box} paddingPercent={1}>
       <button
         type="button"
         aria-label={`Select ${box.value}`}

@@ -624,6 +624,7 @@ export const CardOption = ({
       onClick={onPress}>
       <Card
         card={option.payload}
+        effectTextNumbers={option.payload.effectTextNumbers}
         orientation={option.payload.orientation}
         className={cn("shadow-lg/30", selected && "outline-6 outline-blue-400")}
         size={22}

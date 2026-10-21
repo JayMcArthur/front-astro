@@ -103,6 +103,7 @@ export const Hand = () => {
               onHoverPopover={() => (
                 <CardHoverPreview
                   card={card}
+                  effectTextNumbers={card.effectTextNumbers}
                   orientation={card.orientation}
                   tooltip={{
                     capable: state.me.capabilities.useLoot && card.canBePlayed,
