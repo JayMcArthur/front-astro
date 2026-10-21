@@ -163,8 +163,20 @@ export const About = ({ onClose }: AboutProps) => {
             link="https://github.com/drmint"
           />
         </ul>
-        <h3 className="mt-8 text-center font-main text-2xl font-bold">Icons</h3>
-        <CreditsItem name="Meigasuu" image="/about/mei.png" />
+        <h3 className="mt-4 mb-2 text-center font-main text-2xl font-bold">
+          Contributors
+        </h3>
+        <ul className="flex flex-wrap justify-center gap-16 text-center font-main text-lg">
+          <CreditsItem
+            name="Shadow knight"
+            pseudo="_shadowknight."
+            image="/about/shadow-knight.gif"
+          />
+        </ul>
+        <h3 className="mt-8 text-center font-main text-2xl font-bold">Art</h3>
+        <ul className="flex flex-wrap justify-center gap-16 text-center font-main text-lg">
+          <CreditsItem name="Meigasuu" image="/about/mei.png" />
+        </ul>
         <h3 className="mt-4 mb-2 text-center font-main text-2xl font-bold">
           Brazilian Portuguese translation
         </h3>
@@ -237,10 +249,11 @@ export const About = ({ onClose }: AboutProps) => {
 interface CreditsItemProps {
   name: string;
   image: string;
+  pseudo?: string;
   link?: string;
 }
 
-const CreditsItem = ({ name, image, link }: CreditsItemProps) => {
+const CreditsItem = ({ name, image, pseudo, link }: CreditsItemProps) => {
   return (
     <li className="flex flex-col items-center">
       {link ? (
@@ -260,7 +273,8 @@ const CreditsItem = ({ name, image, link }: CreditsItemProps) => {
           className="size-32 rounded-xl border-3 border-white"
         />
       )}
-      <p className="mt-4 mb-2 uppercase">{name}</p>
+      <p className="mt-4 mb-1 uppercase">{name}</p>
+      {pseudo && <p className="text-xs text-space-200">{pseudo}</p>}
     </li>
   );
 };
