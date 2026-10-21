@@ -278,7 +278,7 @@ export const Card = ({
               card={card}
               occurrenceIndex={effectTextNumber.occurrenceIndex}
               value={effectTextNumber.value}
-              size={size * 0.03}
+              size={size}
             />
           ))}
 
@@ -462,7 +462,7 @@ export const EffectTextNumberComponent = ({
       <div className="absolute inset-0 rounded-xs bg-[#ede7e2]" />
       <div
         className="absolute inset-0 flex animate-pulse items-center justify-center font-alt-stats font-bold text-black"
-        style={{ fontSize: size + "em" }}>
+        style={{ fontSize: size * (1 - (numberBox.top + numberBox.bottom)) + "em" }}>
         {value}
       </div>
     </CardTextMarker>
